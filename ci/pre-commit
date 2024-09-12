@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Find all staged Python files
+files=$(git diff --cached --name-only --diff-filter=d | grep '\.py$')
+
+if [ -z "$files" ]; then
+    echo "No Python files staged for commit."
+    exit 0
+fi
+
+VENV_DIR="ci_venv"
+
+if [ ! -d $VENV_DIR ]; then
+    ./ci_venv.sh
+else
+    echo ===== USING EXISTING CI_VENV =====
+fi
+
+source "$VENV_DIR/bin/activate"
+
+echo "Running Black on staged files..."
+black $files
+
+if ! git diff --quiet; then
+    echo "Python files were automatically formatted by black."
+    echo "Please review the changes and commit again. (No commit made)"
+    exit 1
+fi
+
+echo "All Python files are properly formatted. (Commit made locally)"
