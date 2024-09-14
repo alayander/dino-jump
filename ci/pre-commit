@@ -21,7 +21,9 @@ source "$VENV_DIR/bin/activate"
 echo "Running Black on staged files..."
 black $files
 
-if ! git diff --quiet; then
+changes=$(git diff --name-only $files)
+
+if [ -n "$changes" ]; then
     echo "Python files were automatically formatted by black."
     echo "Please review the changes and commit again. (No commit made)"
     exit 1
