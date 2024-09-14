@@ -6,3 +6,5 @@ The scripts in this directory are meant to be run from the root directory of the
     - This script sets up a pre-commit git hook using the `pre-commit` file in this directory
 - ci_venv.sh
     - This script is a helper script to set up the virtual environment and install the necessary packages
+
+**After setting the pre-commit, it can be bypassed by adding `--no-verify` to git commit command**
