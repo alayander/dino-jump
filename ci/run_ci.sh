@@ -3,7 +3,7 @@
 VENV_DIR="ci_venv"
 
 if [ ! -d $VENV_DIR ]; then
-    ./ci_venv.sh
+    ./ci/ci_venv.sh
 else
     echo ===== USING EXISTING CI_VENV =====
 fi
