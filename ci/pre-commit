@@ -34,7 +34,7 @@ pylint_output=$(pylint $files)
 overall_score=$(echo "$pylint_output" | grep 'Your code has been rated at' | awk '{print $7}' | sed 's,/10,,')
 echo "$pylint_output"
 
-if (( $(echo "$overall_score < 9" | bc -l) )); then
+if awk "BEGIN { exit !($overall_score < 9) }"; then
     echo "Pylint score is below 9." 
     echo "Please review Pylint messages and commit again. (No commit made)"
     exit 1
