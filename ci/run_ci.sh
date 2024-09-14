@@ -2,6 +2,8 @@
 
 VENV_DIR="ci_venv"
 
+path=${1:-.}
+
 if [ ! -d $VENV_DIR ]; then
     ./ci/ci_venv.sh
 else
@@ -10,10 +12,10 @@ fi
 
 source "$VENV_DIR/bin/activate"
 
-black . --exclude "ci_venv/"
+black $path --exclude "ci_venv/"
 
 echo ===== BLACK AUTOFORMATER COMPLETE =====
 
-find . -name "*.py" -print0 | xargs -0 pylint --disable=
+find $path -name "*.py" -print0 | xargs -0 pylint --disable=
 
 echo ===== PYLINT COMPLETE =====
