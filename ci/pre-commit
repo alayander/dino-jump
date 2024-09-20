@@ -30,7 +30,7 @@ if [ -n "$changes" ]; then
 fi
 
 echo "Running Pylint on staged files..."
-pylint_output=$(pylint $files)
+pylint_output=$(pylint --rc ci/.pylintrc $files)
 overall_score=$(echo "$pylint_output" | grep 'Your code has been rated at' | awk '{print $7}' | sed 's,/10,,')
 echo "$pylint_output"
 
