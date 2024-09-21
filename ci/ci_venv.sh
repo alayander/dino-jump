@@ -21,5 +21,6 @@ source "$VENV_DIR/bin/activate"
 python3 -m pip install --upgrade pip
 pip install pylint
 pip install black
+pip install clang-format
 
 echo ===== SETUP AND INSTALLATION OF PACKAGES COMPLETE =====
