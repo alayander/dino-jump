@@ -1,7 +1,9 @@
 The scripts in this directory are meant to be run from the root directory of the repository: `./ci/{script}`
 
 - run_ci.sh {path}
-    - This script runs a python linter and autoformatter
+    - This script runs:
+        - A python linter (pylint) and autoformatter (black)
+        - A C++ autoformatter (clang-format)
     - {path} can be supplied to run the ci suite on a specific directory
 - setup_pre-commit.sh
     - This script sets up a pre-commit git hook using the `pre-commit` file in this directory
