@@ -1,10 +1,11 @@
 #!/bin/bash
 
 # Find all staged Python files
-files=$(git diff --cached --name-only --diff-filter=d | grep '\.py$')
+py_files=$(git diff --cached --name-only --diff-filter=d | grep '\.py$')
+ino_files=$(git diff --cached --name-only --diff-filter=d | grep '\.ino$')
 
-if [ -z "$files" ]; then
-    echo "No Python files staged for commit."
+if [ -z "$py_files" ] && [ -z "$ino_files" ]; then
+    echo "No Python/Arduino files staged for commit."
     exit 0
 fi
 
@@ -18,26 +19,48 @@ fi
 
 source "$VENV_DIR/bin/activate"
 
-echo "Running Black on staged files..."
-black $files
+if [ ! -z "$py_files" ]; then
 
-changes=$(git diff --name-only $files)
+    echo "Running Black on staged files..."
+    black $py_files
 
-if [ -n "$changes" ]; then
-    echo "Python files were automatically formatted by black."
-    echo "Please review the changes and commit again. (No commit made)"
-    exit 1
+    changes=$(git diff --name-only $py_files)
+
+    if [ -n "$changes" ]; then
+        echo "Python files were automatically formatted by black."
+        echo "Please review the changes and commit again. (No commit made)"
+        exit 1
+    fi
+
+    echo "Running Pylint on staged files..."
+    pylint_output=$(pylint --rc ci/.pylintrc $py_files)
+    overall_score=$(echo "$pylint_output" | grep 'Your code has been rated at' | awk '{print $7}' | sed 's,/10,,')
+    echo "$pylint_output"
+
+    if awk "BEGIN { exit !($overall_score < 9) }"; then
+        echo "Pylint score is below 9." 
+        echo "Please review Pylint messages and commit again. (No commit made)"
+        exit 1
+    fi
+
+    echo "All Python files are properly formatted and linted."
 fi
 
-echo "Running Pylint on staged files..."
-pylint_output=$(pylint --rc ci/.pylintrc $files)
-overall_score=$(echo "$pylint_output" | grep 'Your code has been rated at' | awk '{print $7}' | sed 's,/10,,')
-echo "$pylint_output"
+if [ ! -z "$ino_files" ]; then
 
-if awk "BEGIN { exit !($overall_score < 9) }"; then
-    echo "Pylint score is below 9." 
-    echo "Please review Pylint messages and commit again. (No commit made)"
-    exit 1
+    echo "Running clang-format on staged files..."
+    clang-format -i $ino_files
+
+    changes=$(git diff --name-only $ino_files)
+
+    if [ -n "$changes" ]; then
+        echo "Arduino files were automatically formatted by clang-format."
+        echo "Please review the changes and commit again. (No commit made)"
+        exit 1
+    fi
+    
+    echo "All Arduino files are properly formatted."
+
 fi
 
-echo "All Python files are properly formatted and linted. (Commit made locally)"
+echo "Pre-commit checks passed!  (Commit made locally)"
