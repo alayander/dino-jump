@@ -16,7 +16,16 @@ check_python_installed
 echo ===== CREATING CI_VENV =====
 
 python3 -m venv "$VENV_DIR"
-source "$VENV_DIR/bin/activate"
+
+os_name=$(uname)
+if [[ "$os_name" == "Linux" || "$os_name" == "Darwin" ]]; then
+    source "$VENV_DIR/bin/activate"
+elif [[ "$os_name" == "CYGWIN"* || "$os_name" == "MINGW"* ]]; then
+    source "$VENV_DIR/Scripts/activate"
+else
+    echo "Error reading back OS, complain to Alex to fix :("
+    exit 1
+fi
 
 python3 -m pip install --upgrade pip
 pip install pylint
