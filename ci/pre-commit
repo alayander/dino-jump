@@ -2,9 +2,9 @@
 
 # Find all staged Python files
 py_files=$(git diff --cached --name-only --diff-filter=d | grep '\.py$')
-ino_files=$(git diff --cached --name-only --diff-filter=d | grep '\.ino$')
+c_files=$(git diff --cached --name-only --diff-filter=d | grep -E '\.(ino|c|h|cpp|hpp)$')
 
-if [ -z "$py_files" ] && [ -z "$ino_files" ]; then
+if [ -z "$py_files" ] && [ -z "$c_files" ]; then
     echo "No Python/Arduino files staged for commit."
     exit 0
 fi
@@ -38,12 +38,12 @@ if [ ! -z "$py_files" ]; then
     echo "All Python files are properly formatted and linted."
 fi
 
-if [ ! -z "$ino_files" ]; then
+if [ ! -z "$c_files" ]; then
 
     echo "Running clang-format on staged files..."
-    clang-format -i $ino_files
+    clang-format -i $c_files
 
-    changes=$(git diff --name-only $ino_files)
+    changes=$(git diff --name-only $c_files)
 
     if [ -n "$changes" ]; then
         echo "Arduino files were automatically formatted by clang-format."
