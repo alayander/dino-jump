@@ -204,6 +204,17 @@ class Dino(Game):
 
     # TODO : Update dino.dino_y position with an integer on height
     def check_jumping(self):
+        # Check if jumping
+
+        # NOTE: JUMP_TIME is given in seconds, whereas pygame records time in milliseconds. This conversion must be 
+        # kept in mind throughout the coding process
+        if pygame.time.get_ticks() - self.jump_start_time < self.JUMP_TIME * 1000: 
+            jump_time = (pygame.time.get_ticks() - self.jump_start_time)/1000   # There may be a more efficient way to do this
+            self.dino_y = self.OG_DINO_Y - jumping_coefficient*(jump_time**2 - self.JUMP_TIME*jump_time) # Tried using the ACCEL and INIT_V function, but it was a little funky
+            # Breakdown of formula: intercepts are at t = 0 and t = JUMP_TIME. Thus, a quadratic relation can be drawn using the two intercepts.
+        else:
+            if self.is_jumping == True:
+                self.jump_start_time = pygame.time.get_ticks() # Record the time that the jump started
 
         # USE THESE IF YOU LIKE:
         # self.jump_start_time
@@ -217,8 +228,6 @@ class Dino(Game):
         # UPDATE THIS:
         # self.dino_y
 
-        pass
-
     # TODO : Update dino.dino_array with a dino sprite
     def update(self):
 
@@ -230,9 +239,18 @@ class Dino(Game):
 
         # UPDATE THIS:
         # self.dino_array
+        
+        # Update walking state
+        if pygame.time.get_ticks()/1000 * self.FPS - self.curr_walk > game.UPDATE_WALK_FRAMES: # UPDATE_WALK_FRAMES may be too low
+            self.curr_walk = 0
+            dino.is_right_foot_down = not dino.is_right_foot_down
 
-        if dino.is_jumping:
+        # Update Dino Array
+        if dino.is_jumping or pygame.time.get_ticks() - self.jump_start_time < self.JUMP_TIME * 1000:
             self.dino_array = self.JUMP_ARRAY
+
+        elif dino.is_ducking and dino.is_right_foot_down:
+            self.dino_array = self.RDUCK_ARRAY
 
         elif dino.is_ducking:
             self.dino_array = self.LDUCK_ARRAY
@@ -272,10 +290,19 @@ class Dino(Game):
 def check_start_game():
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            game.start_game = True
+            global jumping_coefficient # Won't change during the game, so define outside of loop
+            # Note: I don't think this is the right place to define it. Will look back into this next week
 
+            game.start_game = True
+            jumping_coefficient = dino.JUMP_HEIGHT / (dino.TIME_TO_PEAK**2 - dino.JUMP_TIME*dino.TIME_TO_PEAK) 
+            
+            
             # TODO : if we want the dino to jump when the game starts,
             # we can add something here!
+
+            # Start the game with the dino jumping
+            dino.is_jumping = True
+            dino.check_jumping()
 
 
 def check_user_input():
@@ -292,16 +319,12 @@ def check_user_input():
                 dino.is_jumping = True
             if event.key == pygame.K_DOWN:
                 dino.is_ducking = True
-            if event.key == pygame.K_LEFT:
-                dino.is_right_foot_down = True
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_SPACE:
                 dino.is_jumping = False
             if event.key == pygame.K_DOWN:
                 dino.is_ducking = False
-            if event.key == pygame.K_LEFT:
-                dino.is_right_foot_down = False
 
 
 def draw_all():
