@@ -138,14 +138,14 @@ class Obstacle_Interaction(Game):
     def __init__(self):
         super().__init__()
 
-        self.curr_cooldown = 30 # generates after however long (IN PIXELS)
+        self.curr_cooldown = 0 # generates after however long (IN PIXELS)
         self.cooldown_variance = np.linspace(10, 50, 5) # variance to cooldown time
         self.base_cooldown = 20 # must wait this long before new cacti generates
     
     def update(self, curr_obs):
         updated_obs = []
         for obs in curr_obs:
-            if obs.obs_x + obs.obs_width - obs.speed > 0:
+            if obs.obs_x + obs.obs_width > 0:
                 obs.obs_x -= obs.speed
                 updated_obs.append(obs)
                 # if its still good (x coord is within its width on the board, it's a keep')
@@ -159,14 +159,23 @@ class Obstacle_Interaction(Game):
         if self.curr_cooldown == 0: # time to generate an object
             # pick some object and speed
             speed = 5 # Should be a formula based on the score or other variables
-            obs_type = "CCC"
-            new_obs = Obstacle(obs_type, speed)
-            # 
+            
+            # Current Implementation: Use a function to develop
+            # Idea: Make each cactus separate rather than concatting different type names together
+            obs_num = 2
+            all_new_obs = []
+
+            for i in range(obs_num):
+                obs_type = "CCC"
+                new_obs = Obstacle(obs_type, speed)
+                new_obs.obs_x += (new_obs.obs_width-3) * i * new_obs.GRID_SIZE
+                all_new_obs.append(new_obs)
+            
             self.curr_cooldown = self.base_cooldown + random.choice(self.cooldown_variance)
-            return True, new_obs
+            return True, obs_num, all_new_obs
         else:
-            self.curr_cooldown -= 1
-            return False, ""
+            self.curr_cooldown = 1
+            return False, 0, ""
     
     def draw(self, curr_obs):
         for obs in curr_obs:
@@ -458,7 +467,7 @@ pygame.init()
 # Wait until first space bar press until the game starts
 while not game.start_game:
     check_start_game()
-    draw_all(curr_obs )
+    draw_all(curr_obs)
 
 # Simulates the whole loop running
 while True:
@@ -470,9 +479,10 @@ while True:
     dino.check_jumping()
     
     # new_obs_generated (boolean), new_obs
-    new_obs_generated, new_obs = obstacle.generate_obstacle()
+    new_obs_generated, new_obs_num, new_obs = obstacle.generate_obstacle()
     if new_obs_generated:
-        curr_obs.append(new_obs)
+        for i in range(new_obs_num):
+            curr_obs.append(new_obs[i])
     
     # updating all objects
     
