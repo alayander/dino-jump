@@ -40,8 +40,8 @@
 */
 
 #include <Wire.h>
-// #include <avr/pgmspace.h>
-#include <pgmspace.h>
+#include <avr/pgmspace.h>
+//#include <pgmspace.h>
 
 #include "TLC59116.h"
 TLC59116Manager tlcmanager(Wire, 100000); // see the I2C_Speed.xls spread sheet for workable speeds
@@ -65,8 +65,8 @@ const int DINO[ROW][COLUMN] = {
 void setup() {
     Serial.begin(9600);
     pinMode(7,OUTPUT);
-    pinMode(5,OUTPUT);
-    digitalWrite(5,HIGH);
+    pinMode(6,OUTPUT);
+    digitalWrite(6,HIGH);
     pinMode(13,OUTPUT);
     Serial.println("setup().arduino done");
 
@@ -89,12 +89,15 @@ void loop() {
   }
 
 void array_to_leds(int array[][COLUMN]) {
+  unsigned int binary = 0;
   for(int i = 0; i < COLUMN; i++) {
     binary = col_to_bin(array, i);
+    tlcmanager.broadcast().off_pattern(0xFFFF);
     tlcmanager.broadcast().on_pattern(binary);
-    delay(2);
+    // delay(0);
   }
-  delay(10);
+  tlcmanager.broadcast().off_pattern(0xFFFF);
+  delay(5);
 }
 
 unsigned int col_to_bin(int array[][COLUMN], int col_num) {
