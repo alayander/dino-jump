@@ -46,7 +46,7 @@ class Game:
         )  # defines axis height with (0,0) lower left corner
         self.start_game = False
         self.game_over = False
-        self.close_all = False  # JOSH once this triggers the whole program closes, triggered by pressing space again
+        self.close_all = False
 
         # Setup Display
         self.game_state_array = np.zeros((self.HEIGHT, self.WIDTH))
@@ -59,7 +59,7 @@ class Game:
         # Initiate the Dino and ObstacleManager Classes
         self.dino = Dino(self.GROUND_AXIS)
         self.all_obstacles = ObstacleManager(
-            self.WIDTH, self.GROUND_AXIS, self.LOW_BIRD_AXIS, self.HIGH_BIRD_AXIS
+            self.WIDTH, (self.GROUND_AXIS, self.LOW_BIRD_AXIS, self.HIGH_BIRD_AXIS)
         )
 
     def update_board_pixels(self, curr_object):
@@ -91,8 +91,6 @@ class Game:
         # If a hit is detected, we end the game
         if is_hit:
             self.game_over = True
-
-        return
 
     def draw_to_screen(self):
 
@@ -161,11 +159,9 @@ class Game:
 #############################################################################
 
 
-class SingleObstacle(Game):
+class SingleObstacle:
 
-    def __init__(
-        self, obs_type, speed, init_width, GROUND_AXIS, LOW_BIRD_AXIS, HIGH_BIRD_AXIS
-    ):
+    def __init__(self, obs_type, speed, init_width, AXES):
 
         # Generation Constants
         self.OBS_TYPE = obs_type  # string, defines c C b B singular obstacle
@@ -179,11 +175,7 @@ class SingleObstacle(Game):
         )  # height and width of the array to call
 
         # Inherited from Game
-        self.GROUND_AXIS, self.LOW_BIRD_AXIS, self.HIGH_BIRD_AXIS = (
-            GROUND_AXIS,
-            LOW_BIRD_AXIS,
-            HIGH_BIRD_AXIS,
-        )
+        self.GROUND_AXIS, self.LOW_BIRD_AXIS, self.HIGH_BIRD_AXIS = AXES
 
         # Define the y axis this obstacle sprite travels along
         if self.OBS_TYPE in ("c", "C"):
@@ -199,9 +191,9 @@ class SingleObstacle(Game):
 #############################################################################
 
 
-class ObstacleManager(Game):
+class ObstacleManager:
 
-    def __init__(self, WIDTH, GROUND_AXIS, LOW_BIRD_AXIS, HIGH_BIRD_AXIS):
+    def __init__(self, WIDTH, AXES):
 
         # Timing Constants
         self.curr_cooldown = (
@@ -216,11 +208,7 @@ class ObstacleManager(Game):
 
         # Inherited from game
         self.WIDTH = WIDTH
-        self.GROUND_AXIS, self.LOW_BIRD_AXIS, self.HIGH_BIRD_AXIS = (
-            GROUND_AXIS,
-            LOW_BIRD_AXIS,
-            HIGH_BIRD_AXIS,
-        )
+        self.AXES = AXES
 
         # Possible Choices for Compound Obstacles and Speeds
         self.ALL_SPEEDS = [3]
@@ -232,7 +220,7 @@ class ObstacleManager(Game):
     def update_location(self):
 
         # Only care about valid obstacles on the game board
-        self.curr_obs = [obs for obs in self.curr_obs if (obs.x + obs.WIDTH > 0)]
+        self.curr_obs = [obs for obs in self.curr_obs if obs.x + obs.WIDTH > 0]
 
         # Update each obstacle's location by its speed
         for obs in self.curr_obs:
@@ -250,14 +238,7 @@ class ObstacleManager(Game):
         if self.curr_cooldown <= 0:
             new_obstacle, new_speed = self.choose_random_obstacle_attributes()
             for i, obs in enumerate(new_obstacle):
-                new_obs = SingleObstacle(
-                    obs,
-                    new_speed,
-                    self.WIDTH,
-                    self.GROUND_AXIS,
-                    self.LOW_BIRD_AXIS,
-                    self.HIGH_BIRD_AXIS,
-                )
+                new_obs = SingleObstacle(obs, new_speed, self.WIDTH, self.AXES)
                 new_obs.x += (new_obs.WIDTH + 1) * i
                 self.curr_obs.append(new_obs)
             self.curr_cooldown = self.BASE_COOLDOWN + random.choice(
@@ -274,7 +255,7 @@ class ObstacleManager(Game):
 #############################################################################
 
 
-class Dino(Game):
+class Dino:
 
     def __init__(self, GROUND_AXIS):
 
@@ -402,8 +383,10 @@ while not game.close_all:
 
 # CURRENT IMPLEMENTATION: DRAW_AND_CHECK_COLLISION_ALL
 # Ideally, draw and check_collision would be two separate functions
-# However, currently running the two functions separately results in the game ending much earlier than expected
-# Current Rationale: Since the function determines the set_location twice for one obs, it could affect future calculations
+# However, currently running the two functions separately results in the game
+# ending much earlier than expected
+# Current Rationale: Since the function determines the set_location twice for one obs,
+# it could affect future calculations
 # Need to see how the data within the obstacles are changed after running the function.
 
 #############################################################################
