@@ -4,10 +4,10 @@ import numpy as np
 
 # define a function that has
 def import_sprite(name):
-    return sprites_dictionary[name]
+    return SPRITES_DICTIONARY[name]
 
 
-sprites_dictionary = {
+SPRITES_DICTIONARY = {
     "c": np.array(
         [
             [0, 0, 0, 0, 0, 0, 0, 0],
