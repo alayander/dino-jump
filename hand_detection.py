@@ -1,4 +1,5 @@
 # IMPORTING LIBRARIES
+#Only added for testing and github. No additional features added
 import cv2
 import cvzone
 
