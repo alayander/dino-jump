@@ -1,6 +1,8 @@
 #include "sprites.hpp"
+#include "bit_array_2d.hpp"
+#include "constants.hpp"
 
-const std::array<std::array<int, CACTUS_WIDTH>, CACTUS_HEIGHT> SMALL_CACTUS_SPRITE = {
+constexpr std::array<std::array<uint8_t, CACTUS_WIDTH>, CACTUS_HEIGHT> SMALL_CACTUS_SPRITE = {
 	{{{0, 0, 0, 0, 0, 0, 0, 0}},
 	 {{0, 0, 0, 0, 0, 0, 0, 0}},
 	 {{0, 0, 0, 0, 0, 0, 0, 0}},
@@ -15,8 +17,9 @@ const std::array<std::array<int, CACTUS_WIDTH>, CACTUS_HEIGHT> SMALL_CACTUS_SPRI
 	 {{0, 1, 1, 1, 1, 0, 0, 0}},
 	 {{0, 0, 0, 1, 1, 0, 0, 0}},
 	 {{0, 0, 0, 1, 1, 0, 0, 0}}}};
+constexpr BitArray2D<CACTUS_WIDTH> SMALL_CACTUS_SPRITE_BIT_ARRAY(SMALL_CACTUS_SPRITE);
 
-const std::array<std::array<int, CACTUS_WIDTH>, CACTUS_HEIGHT> LARGE_CACTUS_SPRITE = {
+constexpr std::array<std::array<uint8_t, CACTUS_WIDTH>, CACTUS_HEIGHT> LARGE_CACTUS_SPRITE = {
 	{{{0, 0, 0, 1, 1, 0, 0, 0}},
 	 {{0, 0, 0, 1, 1, 0, 0, 0}},
 	 {{0, 0, 0, 1, 1, 0, 1, 1}},
@@ -31,8 +34,9 @@ const std::array<std::array<int, CACTUS_WIDTH>, CACTUS_HEIGHT> LARGE_CACTUS_SPRI
 	 {{0, 1, 1, 1, 1, 1, 0, 0}},
 	 {{0, 0, 0, 1, 1, 1, 0, 0}},
 	 {{0, 0, 0, 1, 1, 1, 0, 0}}}};
+constexpr BitArray2D<CACTUS_WIDTH> LARGE_CACTUS_SPRITE_BIT_ARRAY(LARGE_CACTUS_SPRITE);
 
-const std::array<std::array<int, BIRD_WIDTH>, BIRD_HEIGHT> BIRD_SPRITE = {{
+constexpr std::array<std::array<uint8_t, BIRD_WIDTH>, BIRD_HEIGHT> BIRD_SPRITE = {{
 	{{0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}},
 	{{0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0}},
 	{{0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0}},
@@ -43,8 +47,9 @@ const std::array<std::array<int, BIRD_WIDTH>, BIRD_HEIGHT> BIRD_SPRITE = {{
 	{{0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0}},
 }};
+constexpr BitArray2D<BIRD_WIDTH> BIRD_SPRITE_BIT_ARRAY(BIRD_SPRITE);
 
-const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_JUMP_SPRITE = {{
+constexpr std::array<std::array<uint8_t, DINO_WIDTH>, DINO_HEIGHT> DINO_JUMP_SPRITE = {{
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
@@ -66,8 +71,9 @@ const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_JUMP_SPRITE = {{
 	{{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0}},
 }};
+constexpr BitArray2D<DINO_WIDTH> DINO_JUMP_SPRITE_BIT_ARRAY(DINO_JUMP_SPRITE);
 
-const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_LEFT_SPRITE = {{
+constexpr std::array<std::array<uint8_t, DINO_WIDTH>, DINO_HEIGHT> DINO_LEFT_SPRITE = {{
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
@@ -89,8 +95,9 @@ const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_LEFT_SPRITE = {{
 	{{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 }};
+constexpr BitArray2D<DINO_WIDTH> DINO_LEFT_SPRITE_BIT_ARRAY(DINO_LEFT_SPRITE);
 
-const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_RIGHT_SPRITE = {{
+constexpr std::array<std::array<uint8_t, DINO_WIDTH>, DINO_HEIGHT> DINO_RIGHT_SPRITE = {{
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
@@ -112,8 +119,9 @@ const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_RIGHT_SPRITE = {
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0}},
 }};
+constexpr BitArray2D<DINO_WIDTH> DINO_RIGHT_SPRITE_BIT_ARRAY(DINO_RIGHT_SPRITE);
 
-const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_LEFT_DUCK_SPRITE = {{
+constexpr std::array<std::array<uint8_t, DINO_WIDTH>, DINO_HEIGHT> DINO_LEFT_DUCK_SPRITE = {{
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
@@ -135,8 +143,9 @@ const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_LEFT_DUCK_SPRITE
 	{{0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 	{{0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 }};
+constexpr BitArray2D<DINO_WIDTH> DINO_LEFT_DUCK_SPRITE_BIT_ARRAY(DINO_LEFT_DUCK_SPRITE);
 
-const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_RIGHT_DUCK_SPRITE = {{
+constexpr std::array<std::array<uint8_t, DINO_WIDTH>, DINO_HEIGHT> DINO_RIGHT_DUCK_SPRITE = {{
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
@@ -158,9 +167,11 @@ const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_RIGHT_DUCK_SPRIT
 	{{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 	{{0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
 }};
+constexpr BitArray2D<DINO_WIDTH> DINO_RIGHT_DUCK_SPRITE_BIT_ARRAY(DINO_RIGHT_DUCK_SPRITE);
 
-const std::array<std::array<int, DEAD_EYE_DIAMETER>, DEAD_EYE_DIAMETER> DEAD_EYE_SPRITE = {{
+constexpr std::array<std::array<uint8_t, DEAD_EYE_DIAMETER>, DEAD_EYE_DIAMETER> DEAD_EYE_SPRITE = {{
 	{{0, 0, 0}},
 	{{0, 1, 0}},
 	{{0, 0, 0}},
 }};
+constexpr BitArray2D<DEAD_EYE_DIAMETER> DEAD_EYE_SPRITE_BIT_ARRAY(DEAD_EYE_SPRITE);
