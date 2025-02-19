@@ -10,7 +10,7 @@ struct termios orig_termios;
 void die(const char *s);
 void reset_terminal();
 
-void print_frame(const std::array<std::array<int, MAX_X>, MAX_Y> &frame) {
+void print_frame(const std::array<std::array<uint8_t, MAX_X>, MAX_Y> &frame) {
 	// Note that the █ character takes two bytes to store, so the buffer length
 	// needs to be big
 	const int BUF_LEN = MAX_Y * MAX_X * 3;

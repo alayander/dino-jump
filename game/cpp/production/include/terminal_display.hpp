@@ -15,6 +15,6 @@
 void init_terminal();
 void reset_terminal();
 char read_key();
-void print_frame(const std::array<std::array<int, MAX_X>, MAX_Y> &frame);
+void print_frame(const std::array<std::array<uint8_t, MAX_X>, MAX_Y> &frame);
 
 #endif // TERMINAL_DISPLAY_HPP
