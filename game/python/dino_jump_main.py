@@ -6,6 +6,7 @@ import sys
 import random
 import numpy as np
 import pygame
+import serial
 
 from sprites import import_sprite
 
@@ -14,6 +15,8 @@ from sprites import import_sprite
 # GAME MODULE
 #############################################################################
 
+
+ser = serial.Serial('COM10', 9600, timeout=0)
 
 class Game:
 
@@ -143,23 +146,36 @@ class Game:
                 self.dino.is_jumping = True
                 self.dino.update_jumping_location()
 
+    # def check_user_input(self):
+    #     for event in pygame.event.get():
+    #         if event.type == pygame.QUIT:
+    #             pygame.quit()
+    #             sys.exit()
+
+    #         if event.type == pygame.KEYDOWN:
+    #             if event.key == pygame.K_SPACE:
+    #                 self.dino.is_jumping = True
+    #             if event.key == pygame.K_DOWN:
+    #                 self.dino.is_ducking = True
+
+    #         if event.type == pygame.KEYUP:
+    #             # if event.key == pygame.K_SPACE:
+    #             #     self.dino.is_jumping = False
+    #             if event.key == pygame.K_DOWN:
+    #                 self.dino.is_ducking = False
+    
     def check_user_input(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    self.dino.is_jumping = True
-                if event.key == pygame.K_DOWN:
-                    self.dino.is_ducking = True
-
-            if event.type == pygame.KEYUP:
-                # if event.key == pygame.K_SPACE:
-                #     self.dino.is_jumping = False
-                if event.key == pygame.K_DOWN:
-                    self.dino.is_ducking = False
+        in_waiting = ser.in_waiting
+        if in_waiting > 0 and not self.dino.is_jumping:
+            s = str(ser.read(in_waiting))       
+            if 'J' in s:
+                self.dino.is_jumping = True
+            if 'D' in s:
+                self.dino.is_ducking = True
+            print(s)
+        else:
+            self.dino.is_ducking = False
+        
 
     def update_full_game_state(self):
         self.background_game_state_array = np.zeros((game.HEIGHT, game.WIDTH)).astype(
@@ -390,8 +406,8 @@ game.draw_to_screen()
 #############################################################################
 
 # Wait until first space bar press until the game starts
-while not game.start_game:
-    game.check_start_game()
+# while not game.start_game:
+#     game.check_start_game()
 
 # Simulates the whole loop running
 while not game.game_over:
@@ -402,10 +418,9 @@ while not game.game_over:
     game.dino.update_dino_footing()
     game.all_obstacles.update_location()
     game.update_full_game_state()
-    game.check_collision_and_game_over()
+    # game.check_collision_and_game_over()
     game.draw_to_screen()
 
-print("game over!")
 game.dino.update_frame()
 game.dino.update_dino_footing()
 game.update_full_game_state()
