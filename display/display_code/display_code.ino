@@ -3,6 +3,9 @@
 #include "images.h"
 #include "frames.hpp"
 
+// #include <VL53L0X.h>
+// VL53L0X sensor;
+
 // #define RESET_PIN 7
 #define RESET_PIN D7
 #define IR_PIN D8
@@ -45,7 +48,7 @@ void setup() {
   digitalWrite(RESET_PIN, LOW);
   delay(5);
   digitalWrite(RESET_PIN, HIGH);
-  Serial.begin(9600);
+  // Serial.begin(9600);
 
   if (!manager.add(&board1))
     Serial.println("Failed to add board1");
@@ -63,8 +66,8 @@ void setup() {
 
   manager.begin();
   manager2.begin();
-  Serial.println("setup() done");
-  start_time = micros();
+  // Serial.println("setup() done");
+  // start_time = micros();
 }
 
 void loop() {
@@ -72,22 +75,27 @@ void loop() {
   //   sanity_check_leds();
 
   if (digitalRead(IR_PIN) == LOW) {
-    bin_to_led(frame_num);
-    if (++frame_num == FRAMES_MAX) {
-      frame_num = 0;
-    }
+    bin_to_led(frame_num % 45);
+    ++frame_num;
+    // if (++frame_num == FRAMES_MAX) {
+    //   frame_num = 0;
+    // }
     // delay(270); // add delay (100) to prevent double image on one side
     // add delay (200) so it only displays on 1 side
   }
 }
 
-void bin_to_led(int frame_num) {
+void bin_to_led(int frame) {
   for(int col = 0; col < COLUMN; col++) {
-    uint64_t bin = col_to_bin(FRAMES[frame_num], col);
-    double col_delay = get_col_delay(bin, frame_num, col);
-    manager.setPattern(bin, 255);
-    manager2.setPattern(bin, 255);
-    delayMicroseconds(200 * col_delay);
+    uint64_t bin = col_to_bin(FRAMES[frame], col);
+    // double col_delay = get_col_delay(bin, frame_num, col);
+    if(frame_num % 2 == 1){
+      manager.setPattern(bin, 255);
+    } else {
+      manager2.setPattern(bin, 255);
+    }
+    // manager.setPattern(bin, 255);
+    // manager2.setPattern(bin, 255);
   }
   manager.setPattern(0, 255);
   manager2.setPattern(0, 255);
@@ -107,6 +115,7 @@ double get_col_delay(uint64_t bin, int frame_num, int col){
 uint64_t col_to_bin(const int img[][COLUMN], int col_num) {
   uint64_t bin = 0;
   for(int row = 0; row < ROW; row++) {
+      // uint64_t uint_64 = img[row][col_num];
       bin |= (uint64_t)img[row][col_num] << row;
     }
   return bin;
@@ -136,6 +145,7 @@ void sanity_check_leds() {
       binary <<= 1;
       binary += 1;
   }
+
   // board1.setPattern(0xFFFF, 255);
   // board2.setPattern(0xFFFF, 255);
   // board3.setPattern(0xFFFF, 255);
