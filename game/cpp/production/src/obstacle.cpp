@@ -5,19 +5,19 @@
 Obstacle::Obstacle(Obstacle_Type type) : type(type) {
 	switch (type) {
 		case SMALL_CACTUS:
-			this->y_position = 0;
+			this->y_position = GROUND_HEIGHT;
 			this->x_position = MAX_X - 1;
 			break;
 		case LARGE_CACTUS:
-			this->y_position = 0;
+			this->y_position = GROUND_HEIGHT;
 			this->x_position = MAX_X - 1;
 			break;
 		case LOW_BIRD:
-			this->y_position = 18;
+			this->y_position = LOW_BIRD_HEIGHT;
 			this->x_position = MAX_X - 1;
 			break;
 		case HIGH_BIRD:
-			this->y_position = 28;
+			this->y_position = HIGH_BIRD_HEIGHT;
 			this->x_position = MAX_X - 1;
 			break;
 		default:
@@ -49,10 +49,7 @@ bool Obstacle::shift_location() {
 
 /* Obstacle Manager Functions */
 
-Obstacle_Manager::Obstacle_Manager() : obstacles() {
-	// Set seed for random number generator
-	std::srand(static_cast<unsigned int>(std::time(0)));
-}
+Obstacle_Manager::Obstacle_Manager() : obstacles() {}
 
 std::vector<Obstacle> Obstacle_Manager::fetch_obstacles() { return this->obstacles; }
 

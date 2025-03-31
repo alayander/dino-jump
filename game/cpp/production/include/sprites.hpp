@@ -14,5 +14,6 @@ extern const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_RIGHT_SPR
 extern const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_LEFT_DUCK_SPRITE;
 extern const std::array<std::array<int, DINO_WIDTH>, DINO_HEIGHT> DINO_RIGHT_DUCK_SPRITE;
 extern const std::array<std::array<int, DEAD_EYE_DIAMETER>, DEAD_EYE_DIAMETER> DEAD_EYE_SPRITE;
+extern const std::array<std::array<int, MAX_X>, GROUND_PATTERN_HEIGHT> GROUND_PATTERN_SPRITE;
 
 #endif // SPRITES_HPP
