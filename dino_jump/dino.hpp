@@ -7,7 +7,8 @@ inline constexpr int PARABOLIC_MOTION = -20;
 inline constexpr int INIT_JUMP_VELOCITY = 12;
 inline constexpr int JUMP_DURATION = 25;
 
-inline constexpr int DEAD_EYE_X = 15;
+inline constexpr int DINO_X = 3;
+inline constexpr int DEAD_EYE_X = 18;
 inline constexpr int DEAD_EYE_Y = 1;
 inline constexpr int DEAD_DUCK_EYE_Y = 10;
 

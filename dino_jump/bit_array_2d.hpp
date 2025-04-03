@@ -5,6 +5,8 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include <iterator>
+#include <algorithm>
 
 template <std::size_t N> class BitArray2D {
   public:
@@ -58,6 +60,10 @@ template <std::size_t N> class BitArray2D {
 	void set_col(int c, uint64_t val) { array[c] = val; }
 
 	uint64_t get_col(int c) const { return array[c]; }
+
+  void rotate() {
+    std::rotate(array.begin(), array.begin() - 1, array.end());
+  }
 
 	void clear() { array = {0}; }
 

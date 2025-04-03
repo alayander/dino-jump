@@ -1,7 +1,7 @@
 #include "dino.hpp"
 
 Dino::Dino()
-	: state(Dino_State::RUNNING), step(Step_State::LEFT), y_position(0),
+	: state(Dino_State::RUNNING), step(Step_State::LEFT), y_position(GROUND_HEIGHT),
 	  jump_velocity(INIT_JUMP_VELOCITY), jump_time(0) {}
 
 Dino_State Dino::get_state() { return this->state; }
@@ -47,11 +47,11 @@ void Dino::jump() {
 
 	int curve = (PARABOLIC_MOTION * jump_time * (jump_time - JUMP_DURATION)) /
 				(JUMP_DURATION * JUMP_DURATION);
-	this->y_position = INIT_JUMP_VELOCITY + curve;
+	this->y_position = INIT_JUMP_VELOCITY + curve + GROUND_HEIGHT;
 	this->jump_time++;
 
-	if (this->y_position <= 0) {
-		this->y_position = 0;
+	if (this->y_position <= GROUND_HEIGHT) {
+		this->y_position = GROUND_HEIGHT;
 		this->jump_velocity = INIT_JUMP_VELOCITY;
 		this->jump_time = 0;
 		this->state = Dino_State::RUNNING;
