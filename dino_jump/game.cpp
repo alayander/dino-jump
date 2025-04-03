@@ -5,8 +5,11 @@
 #include "sprites.hpp"
 
 Game::Game()
-	: score(0), cooldown_count(0), collision(false), frame(), dino(Dino()),
-	  obs_manager(Obstacle_Manager()) {}
+	: score(0), cooldown_count(0), collision(false), ground_pattern(GROUND_PATTERN_ARRAY), frame(), dino(Dino()),
+	  obs_manager(Obstacle_Manager()) {
+  // Set seed for random number generator
+  std::srand(static_cast<unsigned int>(std::time(0)));
+}
 const BitArray2D<DINO_WIDTH> &fetch_dino_sprite();
 int Game::get_score() { return this->score; }
 
@@ -62,7 +65,7 @@ void Game::draw_dino() {
 	int y_position = dino.get_y_position();
 	for (int i = 0; i < DINO_WIDTH; ++i) {
 		for (int j = 0; j < DINO_HEIGHT; ++j) {
-			frame.set(DINO_DRAW_Y + j - y_position, i, sprite.get(j, i));
+			frame.set(DINO_DRAW_Y + j - y_position, i + DINO_X, sprite.get(j, i));
 		}
 	}
 }
@@ -143,9 +146,21 @@ void Game::draw_bird_with_collision(std::array<int, 2> location) {
 	}
 }
 
+void Game::draw_ground() {
+  	for (int col = 0; col < MAX_X; ++col) {
+    	frame.set(MAX_Y - GROUND_HEIGHT, col, 1);
+		for (int row = 0; row < GROUND_PATTERN_HEIGHT; ++row) {
+			frame.set(MAX_Y - row - 1, col, ground_pattern.get(GROUND_PATTERN_HEIGHT - row - 1, col));
+		}
+  }
+
+  ground_pattern.rotate();
+}
+
 void Game::update_frame() {
 	frame.clear();
 
+  	draw_ground();
 	draw_dino();
 
 	std::vector<Obstacle> obstacles = obs_manager.fetch_obstacles();
