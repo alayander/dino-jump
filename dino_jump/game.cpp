@@ -10,7 +10,7 @@ Game::Game()
   // Set seed for random number generator
   std::srand(static_cast<unsigned int>(std::time(0)));
 }
-const BitArray2D<DINO_WIDTH> &fetch_dino_sprite();
+
 int Game::get_score() { return this->score; }
 
 bool Game::get_collision() { return this->collision; }
@@ -93,11 +93,9 @@ void Game::draw_small_cactus_with_collision(std::array<int, 2> location) {
 
 		for (int j = 0; j < CACTUS_HEIGHT; ++j) {
 			if (bit_array.get(j, i)) {
-        // TODO
-        // uncomment
-//				if (frame.get(CACTUS_DRAW_Y + j - location[1], i + location[0]) == 1) {
-//					this->collision = true;
-//				}
+				if (frame.get(CACTUS_DRAW_Y + j - location[1], i + location[0]) == 1) {
+					this->collision = true;
+				}
 				frame.set(CACTUS_DRAW_Y + j - location[1], i + location[0], bit_array.get(j, i));
 			}
 		}
@@ -114,11 +112,9 @@ void Game::draw_large_cactus_with_collision(std::array<int, 2> location) {
 
 		for (int j = 0; j < CACTUS_HEIGHT; ++j) {
 			if (bit_array.get(j, i)) {
-        // TODO
-        // uncomment
-//				if (frame.get(CACTUS_DRAW_Y + j - location[1], i + location[0]) == 1) {
-//					this->collision = true;
-//				}
+				if (frame.get(CACTUS_DRAW_Y + j - location[1], i + location[0]) == 1) {
+					this->collision = true;
+				}
 				frame.set(CACTUS_DRAW_Y + j - location[1], i + location[0], bit_array.get(j, i));
 			}
 		}
@@ -135,11 +131,9 @@ void Game::draw_bird_with_collision(std::array<int, 2> location) {
 
 		for (int j = 0; j < BIRD_HEIGHT; ++j) {
 			if (bit_array.get(j, i)) {
-        // TODO
-        // uncomment
-//				if (frame.get(BIRD_DRAW_Y + j - location[1], i + location[0]) == 1) {
-//					this->collision = true;
-//				}
+				if (frame.get(BIRD_DRAW_Y + j - location[1], i + location[0]) == 1) {
+					this->collision = true;
+				}
 				frame.set(BIRD_DRAW_Y + j - location[1], i + location[0], bit_array.get(j, i));
 			}
 		}
@@ -160,7 +154,8 @@ void Game::draw_ground() {
 void Game::update_frame() {
 	frame.clear();
 
-  	draw_ground();
+	// FIXME: not sure how, but draw_ground() causes UB, eg. collision is set to true after this call
+  	// draw_ground();
 	draw_dino();
 
 	std::vector<Obstacle> obstacles = obs_manager.fetch_obstacles();
