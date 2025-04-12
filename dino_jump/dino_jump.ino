@@ -49,25 +49,24 @@ void setup() {
   display.begin();
 
   attachInterrupt(digitalPinToInterrupt(BASE_INPUT1_PIN), handle_jump, RISING);
-
-  Serial.begin(9600);
 }
 
 void loop() {
-  switch (currentState) {
-    case IDLE:
-      idle_loop();
-      break;
-    case TITLE: 
-      title_loop();
-      break;
-    case GAME:
-      game_loop();
-      break;
-    case DEATH:
-      death_loop();
-      break;
-  }
+  title_loop();
+//  switch (currentState) {
+//    case IDLE:
+//      idle_loop();
+//      break;
+//    case TITLE: 
+//      title_loop();
+//      break;
+//    case GAME:
+//      game_loop();
+//      break;
+//    case DEATH:
+//      death_loop();
+//      break;
+//  }
 }
 
 void idle_loop() {
@@ -75,7 +74,6 @@ void idle_loop() {
   advance = false;
   
   while (!advance) {
-    Serial.println("Idle");
   }
   currentState = TITLE;
 }
@@ -85,7 +83,6 @@ void title_loop() {
   timedout = false;
   
   while (!advance && !timedout) {
-    Serial.println("Title");
     if (jumped) {
       jumped = false;
       timedout = true;
@@ -108,7 +105,6 @@ void game_loop() {
   detachInterrupt(digitalPinToInterrupt(BASE_INPUT0_PIN));
   
   while (!game.get_collision()) {
-    Serial.println("Game");
     if (digitalRead(PROXIMITY_PIN) == LOW) {
       display.flash_frame(game.get_frame(), digitalRead(BEAM_BREAK_PIN) == HIGH ? 1 : 0);
   
@@ -131,7 +127,6 @@ void game_loop() {
 void death_loop() {
   unsigned long death_screen_start = millis();
   while (millis() - death_screen_start < 10000) {
-    Serial.println("Death");
     display.flash_frame(game.get_frame(), digitalRead(BEAM_BREAK_PIN) == HIGH ? 1 : 0);
   }
 
