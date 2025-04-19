@@ -18,14 +18,9 @@ void setup()
 
 void loop()
 {
-  while (!spin) {
-    int reading = analogRead(START_PIN);
-    if (reading > ANALOG_THRESHOLD) {
-      spin = true;
-    }
-  }
-  
-  while (spin) {
+  if (digitalRead(START_PIN) == HIGH) {
     md.setM1Speed(129);
+  } else {
+    md.setM1Speed(0);
   }
 }
