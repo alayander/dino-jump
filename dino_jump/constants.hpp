@@ -4,7 +4,7 @@
 inline constexpr int MAX_X = 120;
 inline constexpr int MAX_Y = 48;
 
-inline constexpr int OBSTACLE_COOLDOWN = 50;
+inline constexpr int OBSTACLE_COOLDOWN = 15;
 
 inline constexpr int CACTUS_HEIGHT = 14;
 inline constexpr int CACTUS_WIDTH = 8;

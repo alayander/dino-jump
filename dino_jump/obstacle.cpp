@@ -30,7 +30,7 @@ Obstacle_Type Obstacle::get_type() { return this->type; }
 std::array<int, 2> Obstacle::get_location() { return {this->x_position, this->y_position}; }
 
 bool Obstacle::shift_location() {
-	this->x_position -= 3;
+	this->x_position -= 5;
 	int width = 0;
 	switch (this->type) {
 		case SMALL_CACTUS:

@@ -33,11 +33,11 @@ class Game {
 	void draw_small_cactus_with_collision(std::array<int, 2> location);
 	void draw_large_cactus_with_collision(std::array<int, 2> location);
 	void draw_bird_with_collision(std::array<int, 2> location);
-  	void draw_ground();
+  void draw_ground();
 	int score;
 	int cooldown_count;
 	bool collision;
-  	Frame ground_pattern;
+  Frame ground_pattern;
 	Frame frame;
 	Dino dino;
 	Obstacle_Manager obs_manager;

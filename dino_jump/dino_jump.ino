@@ -52,7 +52,6 @@ void setup() {
 
   display.begin();
 
-  attachInterrupt(digitalPinToInterrupt(BASE_INPUT1_PIN), handle_jump, RISING);
   attachInterrupt(digitalPinToInterrupt(BEAM_BREAK_PIN), handle_beam_break_rising, RISING);
 }
 
@@ -91,6 +90,7 @@ void idle_loop() {
 
 void title_loop() {
   attachInterrupt(digitalPinToInterrupt(BASE_INPUT0_PIN), handle_state_input, RISING);
+  attachInterrupt(digitalPinToInterrupt(BASE_INPUT1_PIN), handle_jump, RISING);
   beam_break_rising = false;
 
   advance = false;
@@ -135,9 +135,11 @@ void title_loop() {
     currentState = GAME;
   }
   detachInterrupt(digitalPinToInterrupt(BASE_INPUT0_PIN));
+  detachInterrupt(digitalPinToInterrupt(BASE_INPUT1_PIN));
 }
 
 void game_loop() {
+  attachInterrupt(digitalPinToInterrupt(BASE_INPUT1_PIN), handle_jump, RISING);
   beam_break_rising = false;
 
   Game curr_game;
@@ -154,6 +156,7 @@ void game_loop() {
       prev = curr;
 
       // Skip first time as time_passed is not a valid value
+     Serial.println("death");
       if (first_time) {
         continue;
       }
@@ -190,8 +193,6 @@ void game_loop() {
       curr_game.update_obstacles();
       curr_game.update_frame();
 
-
-
       beam_break_rising = false;
     }
     delay(1);
@@ -200,6 +201,7 @@ void game_loop() {
   Serial.println("Collision occured");
   game = curr_game;
   currentState = DEATH;
+  detachInterrupt(digitalPinToInterrupt(BASE_INPUT1_PIN));
 }
 
 void death_loop() {
