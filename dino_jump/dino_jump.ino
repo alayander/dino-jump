@@ -52,6 +52,7 @@ void setup() {
 
   display.begin();
 
+  digitalWrite(BASE_OUTPUT_PIN, LOW);
   attachInterrupt(digitalPinToInterrupt(BEAM_BREAK_PIN), handle_beam_break_rising, RISING);
 }
 

@@ -17,7 +17,7 @@ const int START_BUTTON_PIN = D10;
 
 const int DEATH_INPUT_PIN = D2;
 
-const int MOTOR_OUTUPUT_PIN = D13;
+const int MOTOR_OUTPUT_PIN = D13;
 
 const int IR_1_THRESHOLD = 300;
 const int IR_2_THRESHOLD = 300;
@@ -31,9 +31,6 @@ GlobalState global_state = IDLE;
 bool prev_foot_detected = false;
 bool jump = false;
 bool duck = false;
-
-bool state_is_new = true;
-unsigned long first_ready_time = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -53,7 +50,7 @@ void setup() {
   pinMode(START_BUTTON_PIN, INPUT_PULLUP);
 
   pinMode(DEATH_INPUT_PIN, INPUT);
-  pinMode(MOTOR_OUTUPUT_PIN, OUTPUT);
+  pinMode(MOTOR_OUTPUT_PIN, OUTPUT);
 }
 
 void loop() {
@@ -78,72 +75,70 @@ void loop() {
 }
 
 void idle() {
-  if (state_is_new) {
-    Serial.println("idle");
-    state_is_new = false;
-  }
-  digitalWrite(MOTOR_OUTUPUT_PIN, LOW);
+  Serial.println("idle");
+  digitalWrite(MOTOR_OUTPUT_PIN, LOW);
 
-  if (digitalRead(SPIN_BUTTON_PIN) == LOW) {
-    digitalWrite(MOTOR_OUTUPUT_PIN, HIGH);
-    digitalWrite(DUCK_OUTPUT_PIN, HIGH);
-    delay(5);
-    digitalWrite(DUCK_OUTPUT_PIN, LOW);
+  while (digitalRead(SPIN_BUTTON_PIN) != LOW);
+  
+  digitalWrite(MOTOR_OUTPUT_PIN, HIGH);
+  digitalWrite(DUCK_OUTPUT_PIN, HIGH);
+  delay(5);
+  digitalWrite(DUCK_OUTPUT_PIN, LOW);
 
-    state_is_new = true;
-    global_state = READY;
-  }
+  global_state = READY;
 }
 
 void ready() {
-  if (state_is_new) {
-    Serial.println("ready");
-    first_ready_time = millis();
-    state_is_new = false;
+  Serial.println("ready");
+  unsigned long first_ready_time = millis();
+
+  bool start = false;
+  bool timeout = (millis() - first_ready_time) > TIMEOUT_LIMIT;
+  while (!timeout && !start) {
+    timeout = (millis() - first_ready_time) > TIMEOUT_LIMIT;
+    start = digitalRead(START_BUTTON_PIN) == LOW;
   }
-
-  bool timeout = (millis() - first_ready_time) > TIMEOUT_LIMIT ;
-
+  
   if (timeout) {
     digitalWrite(JUMP_OUTPUT_PIN, HIGH);
-    digitalWrite(MOTOR_OUTUPUT_PIN, LOW);
+    digitalWrite(MOTOR_OUTPUT_PIN, LOW);
     delay(5);
     digitalWrite(JUMP_OUTPUT_PIN, LOW);
-    digitalWrite(MOTOR_OUTUPUT_PIN, HIGH);
+    digitalWrite(MOTOR_OUTPUT_PIN, HIGH);
 
-    state_is_new = true;
     global_state = IDLE;
   }
 
-  if (digitalRead(START_BUTTON_PIN) == LOW) {
+  if (start) {
     digitalWrite(DUCK_OUTPUT_PIN, HIGH);
     delay(5);
     digitalWrite(DUCK_OUTPUT_PIN, LOW);
 
-    state_is_new = true;
     global_state = RUNNING;
   }
 }
 
+// TODO Registering death unexpectedly
 void running() {
-  if (state_is_new) {
-    Serial.println("running");
-    attachInterrupt(digitalPinToInterrupt(DEATH_INPUT_PIN), handle_death, RISING);
-    state_is_new = false;
+  Serial.println("running");
+  attachInterrupt(digitalPinToInterrupt(DEATH_INPUT_PIN), handle_death, RISING);
+
+  while (global_state == RUNNING) {
+    if (digitalRead(SW_PIN) == LOW){
+      detect_button_input();
+    } else {
+      detect_ducking();
+      detect_jumping();
+    }
   }
-  
-  if (digitalRead(SW_PIN) == LOW){
-    detect_button_input();
-  } else {
-    detect_ducking();
-    detect_jumping();
-  }
+
+  digitalWrite(DUCK_OUTPUT_PIN, LOW);
+  digitalWrite(JUMP_OUTPUT_PIN, LOW);
+  detachInterrupt(digitalPinToInterrupt(DEATH_INPUT_PIN));
 }
 
 void handle_death() {
-  state_is_new = true;
   global_state = READY;
-  detachInterrupt(digitalPinToInterrupt(DEATH_INPUT_PIN));
 }
 
 void detect_button_input(){
