@@ -18,7 +18,7 @@ void setup()
 
 void loop()
 {
-  if (digitalRead(START_PIN) == HIGH) {
+  if (analogRead(START_PIN) > ANALOG_THRESHOLD) {
     md.setM1Speed(129);
   } else {
     md.setM1Speed(0);

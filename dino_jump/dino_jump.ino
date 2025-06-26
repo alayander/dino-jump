@@ -5,7 +5,6 @@
 
 /* Display Pins */
 #define RESET_PIN D7
-#define PROXIMITY_PIN D8
 #define BEAM_BREAK_PIN D9
 
 /* Base ESP32 Pins */
@@ -38,7 +37,6 @@ void setup() {
   Wire.begin();
   Wire.setClock(800000);
 
-  pinMode(PROXIMITY_PIN, INPUT);
   pinMode(BEAM_BREAK_PIN, INPUT_PULLUP);
 
   pinMode(BASE_INPUT0_PIN, INPUT);
@@ -196,6 +194,7 @@ void game_loop() {
 
       beam_break_rising = false;
     }
+    digitalWrite(BASE_OUTPUT_PIN, LOW);
     delay(1);
   }
 
