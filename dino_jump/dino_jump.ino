@@ -3,6 +3,9 @@
 #include "hologram_fan.hpp"
 #include "title_frame.hpp"
 
+#include <esp_now.h>
+#include <WiFi.h>
+
 /* Display Pins */
 #define RESET_PIN D7
 #define BEAM_BREAK_PIN D9
@@ -12,6 +15,7 @@
 #define BASE_INPUT1_PIN D11 // JUMP (Orange)
 #define BASE_OUTPUT_PIN D12 // DEATH (Yellow)
 
+#define LED_BUILTIN 13
 
 enum State {
   IDLE,
@@ -23,25 +27,47 @@ enum State {
 const unsigned long MAX_EXPECTED_PERIOD = 350;
 const unsigned long DEATH_SCREEN_PERIOD = 5000;
 
+typedef struct {
+  bool jump;
+  bool duck;
+} input_message;
+
+input_message incoming;
+
+uint8_t inputMAC[] = {0x74, 0x4D, 0xBD, 0xA2, 0x0D, 0x38};
+
 Game game;
 HologramFan display;
 State currentState = IDLE;
 bool advance = false;
 bool jumped = false;
+bool ducked = false;
 bool timedout = false;
 bool beam_break_rising = false;
 
+
+void onReceive(const uint8_t *mac, const uint8_t *data, int len) {
+  memcpy(&incoming, data, sizeof(incoming));
+  digitalWrite(LED_BUILTIN, HIGH);
+  Serial.print(incoming.jump);
+  Serial.print(" ");
+  Serial.println(incoming.duck);
+  digitalWrite(LED_BUILTIN, LOW);
+}
 
 void setup() {
   Serial.begin(9600);
   Wire.begin();
   Wire.setClock(800000);
 
+  // pin initialization
   pinMode(BEAM_BREAK_PIN, INPUT_PULLUP);
 
   pinMode(BASE_INPUT0_PIN, INPUT);
   pinMode(BASE_INPUT1_PIN, INPUT);
   pinMode(BASE_OUTPUT_PIN, OUTPUT);
+
+  pinMode(LED_BUILTIN, OUTPUT);
 
   pinMode(RESET_PIN, OUTPUT);
   digitalWrite(RESET_PIN, LOW);
@@ -52,6 +78,29 @@ void setup() {
 
   digitalWrite(BASE_OUTPUT_PIN, LOW);
   attachInterrupt(digitalPinToInterrupt(BEAM_BREAK_PIN), handle_beam_break_rising, RISING);
+
+  // ESP-NOW establishment
+  WiFi.mode(WIFI_STA);
+
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("ESP-NOW init failed");
+    return;
+  }
+
+  delay(10000);
+
+  esp_now_peer_info_t peerInfo = {};
+  memcpy(peerInfo.peer_addr, inputMAC, 6);
+  peerInfo.channel = 0;
+  peerInfo.encrypt = false;
+
+  if (!esp_now_is_peer_exist(inputMAC)) {
+    if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+      Serial.println("Failed to add peer");
+    }
+  }
+
+  esp_now_register_recv_cb(onReceive);
 }
 
 void loop() {
@@ -161,10 +210,9 @@ void game_loop() {
       }
       display.flash_frame(curr_game.get_frame(), 1);
   
-      if (jumped) {
+      if (incoming.jump) {
         curr_game.input(Input_State::JUMP);
-        jumped = false;
-      } else if (digitalRead(BASE_INPUT0_PIN) == HIGH) {
+      } else if (incoming.duck) {
         curr_game.input(Input_State::DUCK);
       } else {
         curr_game.input(Input_State::NEUTRAL);
@@ -181,10 +229,9 @@ void game_loop() {
       }
 
       // Update game regardless of flashing as we don't want to slow down the game
-      if (jumped) {
+      if (incoming.jump) {
         curr_game.input(Input_State::JUMP);
-        jumped = false;
-      } else if (digitalRead(BASE_INPUT0_PIN) == HIGH) {
+      } else if (incoming.duck) {
         curr_game.input(Input_State::DUCK);
       } else {
         curr_game.input(Input_State::NEUTRAL);
