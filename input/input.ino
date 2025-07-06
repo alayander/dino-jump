@@ -4,9 +4,6 @@
 const int DUCK_INPUT_PIN_1 = A1;
 const int DUCK_INPUT_PIN_2 = A2;
 
-const int DUCK_OUTPUT_PIN = D10;
-const int JUMP_OUTPUT_PIN = D11;
-
 const int JUMP_INPUT_BEAM_PIN_1 = D2; 
 const int JUMP_INPUT_BEAM_PIN_2 = D3;
 const int JUMP_INPUT_BEAM_PIN_3 = D4;
@@ -34,8 +31,8 @@ GlobalState global_state = IDLE;
 bool prev_foot_detected = false;
 
 typedef struct {
-  bool jump;
-  bool duck;
+  bool jump_timeout;
+  bool duck_advance;
 } input_message;
 
 input_message outgoing;
@@ -44,9 +41,9 @@ uint8_t gameMAC[] = {0x3C, 0x84, 0x27, 0xC2, 0xDF, 0x90};
 
 void onSend(const uint8_t *mac_addr, esp_now_send_status_t status) {
   Serial.print("Message: ");
-  Serial.print(outgoing.jump);
+  Serial.print(outgoing.jump_timeout);
   Serial.print(" ");
-  Serial.print(outgoing.duck);
+  Serial.print(outgoing.duck_advance);
   Serial.print(" Send status: ");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
 }
@@ -56,9 +53,6 @@ void setup() {
   Serial.begin(9600);
 
   // pin initialization
-  pinMode(DUCK_OUTPUT_PIN, OUTPUT);
-  pinMode(JUMP_OUTPUT_PIN, OUTPUT);
-
   pinMode(JUMP_INPUT_BEAM_PIN_1, INPUT_PULLUP);
   pinMode(JUMP_INPUT_BEAM_PIN_2, INPUT_PULLUP);
   pinMode(JUMP_INPUT_BEAM_PIN_3, INPUT_PULLUP);
@@ -73,8 +67,6 @@ void setup() {
   pinMode(DEATH_INPUT_PIN, INPUT);
   pinMode(MOTOR_OUTPUT_PIN, OUTPUT);
 
-  digitalWrite(DUCK_OUTPUT_PIN, LOW);
-  digitalWrite(JUMP_OUTPUT_PIN, LOW);
   digitalWrite(MOTOR_OUTPUT_PIN, LOW);
 
   // ESP-NOW establishment
@@ -85,7 +77,8 @@ void setup() {
     return;
   }
 
-  delay(10000);
+  // Delay to ensure peer has initialzied ESP-NOW
+  delay(1000);
 
   esp_now_peer_info_t peerInfo = {};
   memcpy(peerInfo.peer_addr, gameMAC, 6);
@@ -99,6 +92,9 @@ void setup() {
   }
 
   esp_now_register_send_cb(onSend);
+
+  outgoing.duck_advance = false;
+  outgoing.jump_timeout = false;
 }
 
 void loop() {
@@ -129,9 +125,12 @@ void idle() {
   while (digitalRead(SPIN_BUTTON_PIN) != LOW);
   
   digitalWrite(MOTOR_OUTPUT_PIN, HIGH);
-  digitalWrite(DUCK_OUTPUT_PIN, HIGH);
-  delay(5);
-  digitalWrite(DUCK_OUTPUT_PIN, LOW);
+
+  outgoing.duck_advance = true;
+  esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
+
+  outgoing.duck_advance = false;
+  esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
 
   global_state = READY;
 }
@@ -148,19 +147,23 @@ void ready() {
   }
   
   if (timeout) {
-    digitalWrite(JUMP_OUTPUT_PIN, HIGH);
     digitalWrite(MOTOR_OUTPUT_PIN, LOW);
-    delay(5);
-    digitalWrite(JUMP_OUTPUT_PIN, LOW);
-    digitalWrite(MOTOR_OUTPUT_PIN, HIGH);
+
+    outgoing.jump_timeout = true;
+    esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
+
+    outgoing.jump_timeout = false;
+    esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
 
     global_state = IDLE;
   }
 
   if (start) {
-    digitalWrite(DUCK_OUTPUT_PIN, HIGH);
-    delay(5);
-    digitalWrite(DUCK_OUTPUT_PIN, LOW);
+    outgoing.duck_advance = true;
+    esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
+
+    outgoing.duck_advance = false;
+    esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
 
     global_state = RUNNING;
   }
@@ -180,8 +183,6 @@ void running() {
 //    }
   }
 
-  digitalWrite(DUCK_OUTPUT_PIN, LOW);
-  digitalWrite(JUMP_OUTPUT_PIN, LOW);
   detachInterrupt(digitalPinToInterrupt(DEATH_INPUT_PIN));
 }
 
@@ -191,15 +192,10 @@ void handle_death() {
 
 void detect_button_input(){
   bool duck = digitalRead(DUCK_BUTTON_INPUT_PIN) == LOW;
-
-  digitalWrite(DUCK_OUTPUT_PIN, duck);
-
   bool jump = digitalRead(JUMP_BUTTON_INPUT_PIN) == LOW;
 
-  digitalWrite(JUMP_OUTPUT_PIN, jump);
-
-  outgoing.duck = duck;
-  outgoing.jump = jump;
+  outgoing.duck_advance = duck;
+  outgoing.jump_timeout = jump;
   esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
 }
 

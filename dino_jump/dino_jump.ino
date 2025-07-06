@@ -11,8 +11,6 @@
 #define BEAM_BREAK_PIN D9
 
 /* Base ESP32 Pins */
-#define BASE_INPUT0_PIN D10 // DUCK (Green)
-#define BASE_INPUT1_PIN D11 // JUMP (Orange)
 #define BASE_OUTPUT_PIN D12 // DEATH (Yellow)
 
 #define LED_BUILTIN 13
@@ -28,8 +26,8 @@ const unsigned long MAX_EXPECTED_PERIOD = 350;
 const unsigned long DEATH_SCREEN_PERIOD = 5000;
 
 typedef struct {
-  bool jump;
-  bool duck;
+  bool jump_timeout;
+  bool duck_advance;
 } input_message;
 
 input_message incoming;
@@ -42,16 +40,14 @@ State currentState = IDLE;
 bool advance = false;
 bool jumped = false;
 bool ducked = false;
-bool timedout = false;
 bool beam_break_rising = false;
-
 
 void onReceive(const uint8_t *mac, const uint8_t *data, int len) {
   memcpy(&incoming, data, sizeof(incoming));
   digitalWrite(LED_BUILTIN, HIGH);
-  Serial.print(incoming.jump);
+  Serial.print(incoming.jump_timeout);
   Serial.print(" ");
-  Serial.println(incoming.duck);
+  Serial.println(incoming.duck_advance);
   digitalWrite(LED_BUILTIN, LOW);
 }
 
@@ -63,8 +59,6 @@ void setup() {
   // pin initialization
   pinMode(BEAM_BREAK_PIN, INPUT_PULLUP);
 
-  pinMode(BASE_INPUT0_PIN, INPUT);
-  pinMode(BASE_INPUT1_PIN, INPUT);
   pinMode(BASE_OUTPUT_PIN, OUTPUT);
 
   pinMode(LED_BUILTIN, OUTPUT);
@@ -87,7 +81,8 @@ void setup() {
     return;
   }
 
-  delay(10000);
+  // Delay to ensure peer has initialzied ESP-NOW
+  delay(1000);
 
   esp_now_peer_info_t peerInfo = {};
   memcpy(peerInfo.peer_addr, inputMAC, 6);
@@ -101,6 +96,9 @@ void setup() {
   }
 
   esp_now_register_recv_cb(onReceive);
+
+  incoming.jump_timeout = false;
+  incoming.duck_advance = false;
 }
 
 void loop() {
@@ -126,28 +124,24 @@ void loop() {
 }
 
 void idle_loop() {
-  attachInterrupt(digitalPinToInterrupt(BASE_INPUT0_PIN), handle_state_input, RISING);
-  advance = false;
-  
-  while (!advance) {
+  while (!incoming.duck_advance) {
     Serial.println("not advancing, still idle");
   }
+
+  delay(5);
+
   currentState = TITLE;
-  detachInterrupt(digitalPinToInterrupt(BASE_INPUT0_PIN));
 }
 
 void title_loop() {
-  attachInterrupt(digitalPinToInterrupt(BASE_INPUT0_PIN), handle_state_input, RISING);
-  attachInterrupt(digitalPinToInterrupt(BASE_INPUT1_PIN), handle_jump, RISING);
   beam_break_rising = false;
 
-  advance = false;
-  timedout = false;
+  bool timedout = false;
 
   unsigned long prev = 0;
   unsigned long curr = millis();
   unsigned long time_passed = 0;
-  while (!advance && !timedout) {
+  while (!incoming.duck_advance && !incoming.jump_timeout) {
     if (beam_break_rising) {
       bool first_time = prev == 0;
       curr = millis();
@@ -169,12 +163,11 @@ void title_loop() {
       beam_break_rising = false;
     }
 
-    if (jumped) {
-      jumped = false;
+    delay(1);
+
+    if (incoming.jump_timeout) {
       timedout = true;
     }
-    
-    delay(1);
   }
 
   if (timedout) {
@@ -182,12 +175,11 @@ void title_loop() {
   } else {
     currentState = GAME;
   }
-  detachInterrupt(digitalPinToInterrupt(BASE_INPUT0_PIN));
-  detachInterrupt(digitalPinToInterrupt(BASE_INPUT1_PIN));
+
+  delay(5);
 }
 
 void game_loop() {
-  attachInterrupt(digitalPinToInterrupt(BASE_INPUT1_PIN), handle_jump, RISING);
   beam_break_rising = false;
 
   Game curr_game;
@@ -210,9 +202,9 @@ void game_loop() {
       }
       display.flash_frame(curr_game.get_frame(), 1);
   
-      if (incoming.jump) {
+      if (incoming.jump_timeout) {
         curr_game.input(Input_State::JUMP);
-      } else if (incoming.duck) {
+      } else if (incoming.duck_advance) {
         curr_game.input(Input_State::DUCK);
       } else {
         curr_game.input(Input_State::NEUTRAL);
@@ -229,9 +221,9 @@ void game_loop() {
       }
 
       // Update game regardless of flashing as we don't want to slow down the game
-      if (incoming.jump) {
+      if (incoming.jump_timeout) {
         curr_game.input(Input_State::JUMP);
-      } else if (incoming.duck) {
+      } else if (incoming.duck_advance) {
         curr_game.input(Input_State::DUCK);
       } else {
         curr_game.input(Input_State::NEUTRAL);
@@ -248,7 +240,6 @@ void game_loop() {
   Serial.println("Collision occured");
   game = curr_game;
   currentState = DEATH;
-  detachInterrupt(digitalPinToInterrupt(BASE_INPUT1_PIN));
 }
 
 void death_loop() {
