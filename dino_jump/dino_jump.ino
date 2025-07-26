@@ -127,6 +127,7 @@ void idle_loop() {
   while (!incoming.duck_advance) {
     Serial.println("not advancing, still idle");
   }
+  incoming.duck_advance = false;
 
   delay(5);
 
@@ -171,8 +172,12 @@ void title_loop() {
   }
 
   if (timedout) {
+    incoming.jump_timeout = false;
+    incoming.duck_advance = false;
     currentState = IDLE;
   } else {
+    incoming.jump_timeout = false;
+    incoming.duck_advance = false;
     currentState = GAME;
   }
 

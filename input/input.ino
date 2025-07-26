@@ -126,11 +126,11 @@ void idle() {
   
   digitalWrite(MOTOR_OUTPUT_PIN, HIGH);
 
+  outgoing.jump_timeout = false;
   outgoing.duck_advance = true;
   esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
 
-  outgoing.duck_advance = false;
-  esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
+  delay(1000);
 
   global_state = READY;
 }
@@ -145,28 +145,23 @@ void ready() {
     timeout = (millis() - first_ready_time) > TIMEOUT_LIMIT;
     start = digitalRead(START_BUTTON_PIN) == LOW;
   }
-  
-  if (timeout) {
-    digitalWrite(MOTOR_OUTPUT_PIN, LOW);
-
-    outgoing.jump_timeout = true;
-    esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
-
-    outgoing.jump_timeout = false;
-    esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
-
-    global_state = IDLE;
-  }
 
   if (start) {
     outgoing.duck_advance = true;
     esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
 
+    global_state = RUNNING;
+  } else if (timeout) {
+    digitalWrite(MOTOR_OUTPUT_PIN, LOW);
+
+    outgoing.jump_timeout = true;
     outgoing.duck_advance = false;
     esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
 
-    global_state = RUNNING;
+    global_state = IDLE;
   }
+  
+  delay(1000);
 }
 
 void running() {
