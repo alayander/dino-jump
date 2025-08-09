@@ -169,13 +169,7 @@ void running() {
   attachInterrupt(digitalPinToInterrupt(DEATH_INPUT_PIN), handle_death, RISING);
 
   while (global_state == RUNNING) {
-//    if (digitalRead(SW_PIN) == LOW){
       detect_button_input();
-//    } else {
-      // TODO
-      // detect_ducking();
-      // detect_jumping();
-//    }
   }
 
   detachInterrupt(digitalPinToInterrupt(DEATH_INPUT_PIN));
@@ -193,90 +187,3 @@ void detect_button_input(){
   outgoing.jump_timeout = jump;
   esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
 }
-
-// void print_min_of_samples() {
-//   char buf[32] = {0};
-//   int min1 = min_of_samples(DUCK_INPUT_PIN_1); 
-//   sprintf(buf, "1:%d", min1);
-//   Serial.println(buf);
-
-//   if (min1 > IR_1_THRESHOLD) {
-//     Serial.println("H1");
-//   } else {
-//     Serial.println("L1");
-//   }
-
-//   int min2 = min_of_samples(DUCK_INPUT_PIN_2); 
-//   sprintf(buf, "2:%d", min2);
-//   Serial.println(buf);
-
-//   if (min2 > IR_2_THRESHOLD) {
-//     Serial.println("H2");
-//   } else {
-//     Serial.println("L2");
-//   }
-// }
-
-// void detect_ducking() {
-//   int min1 = min_of_samples(DUCK_INPUT_PIN_1); 
-//   int min2 = min_of_samples(DUCK_INPUT_PIN_2); 
-
-//   duck = min1 < IR_1_THRESHOLD && min2 < IR_2_THRESHOLD;
-//   if (duck) {
-//     Serial.println("D");
-//   }
-  
-//   digitalWrite(DUCK_OUTPUT_PIN, duck);
-//   //Serial.print("Duck: ");
-//   //Serial.println(duck);
-// }
-
-// int min_of_samples(const int pin) {
-//   uint32_t min = 0xFFFFFFFF; 
-
-//   for (int i = 0; i < SAMPLE_SIZE; i++) {
-//     int val = analogRead(pin);
-//     if (min > val) {
-//       min = val;
-//     }
-//   }
-
-//   return min;
-// }
-
-
-// void print_val() {
-//   // analogRead takes ~100us
-//   int read_val = analogRead(DUCK_INPUT_PIN_1);
-//   char buf[32] = {0};
-//   sprintf(buf, "1:%d", read_val);
-//   Serial.println(buf);
-
-//   read_val = analogRead(DUCK_INPUT_PIN_2);
-//   sprintf(buf, "2:%d", read_val);
-//   Serial.println(buf);
-// }
-
-// void detect_jumping() {
-//   bool foot_detected = digitalRead(JUMP_INPUT_BEAM_PIN_1) == LOW
-//                     || digitalRead(JUMP_INPUT_BEAM_PIN_2) == LOW
-//                     || digitalRead(JUMP_INPUT_BEAM_PIN_3) == LOW;
-//                     //if any pair of beam sensors detect a foot -> one of them low (== eval to 1) -> makes everything true -> foot detected
-//                     //if any pair of beam sensors detect NO foot -> one of them high (== eval to 0) -> everything false only if all of them false -> no foot detected
-//    // Serial.print("PIN 1");
-//    // Serial.println(digitalRead(JUMP_INPUT_BEAM_PIN_1));
-//    // Serial.print("PIN 2");
-//    // Serial.println(digitalRead(JUMP_INPUT_BEAM_PIN_2));
-//    // Serial.print("PIN 3");
-//    // Serial.println(digitalRead(JUMP_INPUT_BEAM_PIN_3));
-//   bool jump = prev_foot_detected && !foot_detected;
-//   if (jump) {
-//     Serial.println("J");
-//   }
-//   prev_foot_detected = foot_detected;
-
-//   digitalWrite(JUMP_OUTPUT_PIN, jump);
-//   //Serial.print("Jump: ");
-//   //Serial.println(jump);
-
-// }
