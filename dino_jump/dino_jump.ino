@@ -30,7 +30,12 @@ typedef struct {
   bool duck_advance;
 } input_message;
 
+typedef struct {
+  int score;
+} game_message;
+
 input_message incoming;
+game_message outgoing;
 
 uint8_t inputMAC[] = {0x74, 0x4D, 0xBD, 0xA2, 0x0D, 0x38};
 
@@ -49,6 +54,13 @@ void onReceive(const uint8_t *mac, const uint8_t *data, int len) {
   Serial.print(" ");
   Serial.println(incoming.duck_advance);
   digitalWrite(LED_BUILTIN, LOW);
+}
+
+void onSend(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.print("Message: ");
+  Serial.print(outgoing.score);
+  Serial.print(" Send status: ");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
 }
 
 void setup() {
@@ -96,6 +108,7 @@ void setup() {
   }
 
   esp_now_register_recv_cb(onReceive);
+  esp_now_register_send_cb(onSend);
 
   incoming.jump_timeout = false;
   incoming.duck_advance = false;
@@ -193,6 +206,8 @@ void game_loop() {
   unsigned long curr = millis();
   unsigned long time_passed = 0;
   while (!curr_game.get_collision()) {
+    outgoing.score = curr_game.get_score();
+    esp_now_send(inputMAC, (uint8_t *)&outgoing, sizeof(outgoing));
     Serial.println("Game loop");
     if (beam_break_rising) {
       bool first_time = prev == 0;
@@ -282,6 +297,9 @@ void death_loop() {
   digitalWrite(BASE_OUTPUT_PIN, HIGH);
   delay(5);
   digitalWrite(BASE_OUTPUT_PIN, LOW);
+
+  incoming.duck_advance = false;
+  incoming.jump_timeout = false;
 
   currentState = TITLE;
 }

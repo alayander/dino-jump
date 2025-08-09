@@ -1,4 +1,7 @@
+#include <Adafruit_LEDBackpack.h>
+#include <Adafruit_GFX.h>
 #include <esp_now.h>
+#include <Preferences.h>
 #include <WiFi.h>
 
 const int DUCK_INPUT_PIN_1 = A1;
@@ -23,6 +26,8 @@ const int IR_1_THRESHOLD = 300;
 const int IR_2_THRESHOLD = 300;
 const int SAMPLE_SIZE = 10;
 
+#define LED_BUILTIN 13
+
 const unsigned long TIMEOUT_LIMIT = 60000;
 
 enum GlobalState { IDLE, READY, RUNNING };
@@ -35,9 +40,44 @@ typedef struct {
   bool duck_advance;
 } input_message;
 
+typedef struct {
+  int score;
+} game_message;
+
 input_message outgoing;
+game_message incoming;
 
 uint8_t gameMAC[] = {0x3C, 0x84, 0x27, 0xC2, 0xDF, 0x90};
+
+Adafruit_LEDBackpack score_hex = Adafruit_LEDBackpack();
+Adafruit_LEDBackpack highscore_hex = Adafruit_LEDBackpack();
+
+Preferences preferences;
+unsigned int highscore = 0;
+
+const uint16_t digitToSegment[10] = {0x3F, 0x06, 0x5B, 0x4F, 0x66,
+                                     0x6D, 0x7D, 0x07, 0x7F, 0x6F};
+
+void displayNumber(Adafruit_LEDBackpack &matrix, int number) {
+  matrix.clear();
+  if (number < 0 || number > 9999)
+    return;
+  int counts[4] = {0, 1, 3, 4};
+  for (int i = 3; i >= 0; i--) {
+    int digit = number % 10;
+    matrix.displaybuffer[counts[i]] = digitToSegment[digit];
+    number /= 10;
+  }
+  matrix.writeDisplay();
+}
+
+void onReceive(const uint8_t *mac, const uint8_t *data, int len) {
+  memcpy(&incoming, data, sizeof(incoming));
+  digitalWrite(LED_BUILTIN, HIGH);
+  Serial.println(incoming.score);
+  digitalWrite(LED_BUILTIN, LOW);
+  displayNumber(score_hex, incoming.score);
+}
 
 void onSend(const uint8_t *mac_addr, esp_now_send_status_t status) {
   Serial.print("Message: ");
@@ -48,6 +88,11 @@ void onSend(const uint8_t *mac_addr, esp_now_send_status_t status) {
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
 }
 
+void load_highscore() {
+  preferences.begin("highscore", false);
+  highscore = preferences.getUInt("counter", 0);
+  preferences.end();
+}
 
 void setup() {
   Serial.begin(9600);
@@ -68,6 +113,13 @@ void setup() {
   pinMode(MOTOR_OUTPUT_PIN, OUTPUT);
 
   digitalWrite(MOTOR_OUTPUT_PIN, LOW);
+
+  load_highscore();
+
+  score_hex.begin(0x70);
+  highscore_hex.begin(0x71);
+  displayNumber(score_hex, 0);
+  displayNumber(highscore_hex, highscore);
 
   // ESP-NOW establishment
   WiFi.mode(WIFI_STA);
@@ -91,6 +143,7 @@ void setup() {
     }
   }
 
+  esp_now_register_recv_cb(onReceive);
   esp_now_register_send_cb(onSend);
 
   outgoing.duck_advance = false;
@@ -137,6 +190,12 @@ void idle() {
 
 void ready() {
   Serial.println("ready");
+
+  if (incoming.score > highscore) {
+    update_highscore(incoming.score);
+    displayNumber(highscore_hex, highscore);
+  }
+
   unsigned long first_ready_time = millis();
 
   bool start = false;
@@ -151,6 +210,7 @@ void ready() {
     esp_now_send(gameMAC, (uint8_t *)&outgoing, sizeof(outgoing));
 
     global_state = RUNNING;
+    incoming.score = 0;
   } else if (timeout) {
     digitalWrite(MOTOR_OUTPUT_PIN, LOW);
 
@@ -160,6 +220,7 @@ void ready() {
 
     global_state = IDLE;
   }
+  displayNumber(score_hex, 0);
   
   delay(1000);
 }
@@ -169,14 +230,23 @@ void running() {
   attachInterrupt(digitalPinToInterrupt(DEATH_INPUT_PIN), handle_death, RISING);
 
   while (global_state == RUNNING) {
-      detect_button_input();
+    detect_button_input();
   }
 
   detachInterrupt(digitalPinToInterrupt(DEATH_INPUT_PIN));
 }
 
+void update_highscore(int score) {
+  preferences.begin("highscore", false);
+  preferences.putUInt("counter", score);
+  preferences.end();
+  highscore = score;
+}
+
 void handle_death() {
   global_state = READY;
+  outgoing.duck_advance = false;
+  outgoing.jump_timeout = false;
 }
 
 void detect_button_input(){
