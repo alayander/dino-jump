@@ -10,9 +10,6 @@
 #define RESET_PIN D7
 #define BEAM_BREAK_PIN D9
 
-/* Base ESP32 Pins */
-#define BASE_OUTPUT_PIN D12 // DEATH (Yellow)
-
 #define LED_BUILTIN 13
 
 enum State {
@@ -32,12 +29,14 @@ typedef struct {
 
 typedef struct {
   int score;
+  bool death;
 } game_message;
 
 input_message incoming;
 game_message outgoing;
 
-uint8_t inputMAC[] = {0x74, 0x4D, 0xBD, 0xA2, 0x0D, 0x38};
+// uint8_t inputMAC[] = {0x74, 0x4D, 0xBD, 0xA2, 0x0D, 0x38};
+uint8_t inputMAC[] = {0xE4, 0xB0, 0x63, 0xAD, 0x8A, 0x28};
 
 Game game;
 HologramFan display;
@@ -48,19 +47,26 @@ bool ducked = false;
 bool beam_break_rising = false;
 
 void onReceive(const uint8_t *mac, const uint8_t *data, int len) {
-  memcpy(&incoming, data, sizeof(incoming));
-  digitalWrite(LED_BUILTIN, HIGH);
-  Serial.print(incoming.jump_timeout);
-  Serial.print(" ");
-  Serial.println(incoming.duck_advance);
-  digitalWrite(LED_BUILTIN, LOW);
+  input_message msg;
+  memcpy(&msg, data, sizeof(msg));
+  // Latch: only set to true, never clear — let consumers clear after reading
+  if (msg.jump_timeout) incoming.jump_timeout = true;
+  if (msg.duck_advance) incoming.duck_advance = true;
+
+  // digitalWrite(LED_BUILTIN, HIGH);
+  // Serial.print("[onReceive] ");
+  // Serial.print(incoming.jump_timeout);
+  // Serial.print(" ");
+  // Serial.println(incoming.duck_advance);
+  // digitalWrite(LED_BUILTIN, LOW);
 }
 
 void onSend(const uint8_t *mac_addr, esp_now_send_status_t status) {
-  Serial.print("Message: ");
-  Serial.print(outgoing.score);
-  Serial.print(" Send status: ");
-  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
+  // Serial.print("[onSend] ");
+  // Serial.print("Message: ");
+  // Serial.print(outgoing.score);
+  // Serial.print(" Send status: ");
+  // Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
 }
 
 void setup() {
@@ -71,8 +77,6 @@ void setup() {
   // pin initialization
   pinMode(BEAM_BREAK_PIN, INPUT_PULLUP);
 
-  pinMode(BASE_OUTPUT_PIN, OUTPUT);
-
   pinMode(LED_BUILTIN, OUTPUT);
 
   pinMode(RESET_PIN, OUTPUT);
@@ -82,7 +86,6 @@ void setup() {
 
   display.begin();
 
-  digitalWrite(BASE_OUTPUT_PIN, LOW);
   attachInterrupt(digitalPinToInterrupt(BEAM_BREAK_PIN), handle_beam_break_rising, RISING);
 
   // ESP-NOW establishment
@@ -201,14 +204,20 @@ void game_loop() {
   beam_break_rising = false;
 
   Game curr_game;
-  
+
   unsigned long prev = 0;
   unsigned long curr = millis();
   unsigned long time_passed = 0;
+  int prev_score = -1;
   while (!curr_game.get_collision()) {
-    outgoing.score = curr_game.get_score();
-    esp_now_send(inputMAC, (uint8_t *)&outgoing, sizeof(outgoing));
-    Serial.println("Game loop");
+    int curr_score = curr_game.get_score();
+    if (curr_score != prev_score) {
+      outgoing.score = curr_score;
+      outgoing.death = false;
+      esp_now_send(inputMAC, (uint8_t *)&outgoing, sizeof(outgoing));
+      prev_score = curr_score;
+    }
+    // Serial.println("Game loop");
     if (beam_break_rising) {
       bool first_time = prev == 0;
       curr = millis();
@@ -216,7 +225,6 @@ void game_loop() {
       prev = curr;
 
       // Skip first time as time_passed is not a valid value
-     Serial.println("death");
       if (first_time) {
         continue;
       }
@@ -229,6 +237,8 @@ void game_loop() {
       } else {
         curr_game.input(Input_State::NEUTRAL);
       }
+      incoming.jump_timeout = false;
+      incoming.duck_advance = false;
       curr_game.update_obstacles();
       curr_game.update_frame();
 
@@ -248,12 +258,13 @@ void game_loop() {
       } else {
         curr_game.input(Input_State::NEUTRAL);
       }
+      incoming.jump_timeout = false;
+      incoming.duck_advance = false;
       curr_game.update_obstacles();
       curr_game.update_frame();
 
       beam_break_rising = false;
     }
-    digitalWrite(BASE_OUTPUT_PIN, LOW);
     delay(1);
   }
 
@@ -294,9 +305,8 @@ void death_loop() {
   }
 
   // Communicate game over to Base
-  digitalWrite(BASE_OUTPUT_PIN, HIGH);
-  delay(5);
-  digitalWrite(BASE_OUTPUT_PIN, LOW);
+  outgoing.death = true;
+  esp_now_send(inputMAC, (uint8_t *)&outgoing, sizeof(outgoing));
 
   incoming.duck_advance = false;
   incoming.jump_timeout = false;
